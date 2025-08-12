@@ -110,16 +110,13 @@ class ScvmmNetworkPoolProvider implements IPAMProvider {
     ServiceResponse deleteHostRecord(NetworkPool networkPool, NetworkPoolIp poolIp, Boolean deleteAssociatedRecords) {
         synchronized(poolMutex) {
             try {
-                def results = [:]
-                if(poolIp.domain && poolIp.externalId) {
-                    Cloud cloud = context.async.cloud.find(new DataQuery()
-                            .withFilter('id',networkPool.refId)
-                            .withFilter('type', networkPool.refType)
-                    ).blockingGet()
-                    def controller = apiService.getScvmmController(cloud)
-                    def scvmmOpts = apiService.getScvmmZoneAndHypervisorOpts(context, cloud, controller)
-                    results = apiService.releaseIPAddress(scvmmOpts, networkPool.id, poolIp.id)
-                }
+                Cloud cloud = context.async.cloud.find(new DataQuery()
+                        .withFilter('id',networkPool.refId)
+                        .withFilter('type', networkPool.refType)
+                ).blockingGet()
+                def controller = apiService.getScvmmController(cloud)
+                def scvmmOpts = apiService.getScvmmZoneAndHypervisorOpts(context, cloud, controller)
+                def results = apiService.releaseIPAddress(scvmmOpts, networkPool.externalId, poolIp?.externalId)
                 if(results.success == true) {
                     context.async.network.pool.poolIp.remove(networkPool.id, [poolIp])
                     context.async.network.pool.poolIp.remove(poolIp)
